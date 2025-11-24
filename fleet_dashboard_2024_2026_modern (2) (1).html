@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fleet Dashboard 2024-2026</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg-body: #0f172a;
+      --bg-card: #020617;
+      --bg-card-soft: #020617;
+      --border-subtle: rgba(148, 163, 184, 0.35);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.1);
+      --accent-strong: #0ea5e9;
+      --text-main: #e5e7eb;
+      --text-soft: #9ca3af;
+      --text-muted: #6b7280;
+      --danger: #fb7185;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.9);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 44%, #020617 100%);
+      color: var(--text-main);
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1320px;
+      margin: auto;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 55%), 
+                  radial-gradient(circle at top right, rgba(251,113,133,0.09), transparent 50%),
+                  rgba(15,23,42,0.94);
+      border-radius: 24px;
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: var(--shadow-soft);
+      padding: 20px 22px 26px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: baseline;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+      padding-bottom: 10px;
+    }
+
+    .title-block {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .pill {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.8);
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+
+    .meta-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56,189,248,0.9);
+    }
+
+    /* Filters */
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .filters {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .filter-card {
+      background: rgba(15,23,42,0.85);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 10px 8px;
+      backdrop-filter: blur(20px);
+    }
+
+    .filter-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filter-label span.badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--accent);
+    }
+
+    select {
+      width: 100%;
+      min-height: 60px;
+      padding: 6px 7px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: rgba(15,23,42,0.96);
+      color: var(--text-main);
+      font-size: 12px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.4);
+    }
+
+    .filter-help {
+      margin-top: 3px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* KPI cards */
+    .kpis-wrapper {
+      margin: 10px 0 20px;
+    }
+
+    .kpis-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpis-title span.accent {
+      color: var(--accent-strong);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .kpis {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpis {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .kpi-card {
+      position: relative;
+      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148,163,184,0.45);
+      padding: 8px 10px 8px;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      opacity: 0;
+      background: radial-gradient(circle at top, rgba(56,189,248,0.18), transparent 55%);
+      transition: opacity 0.25s ease-out;
+      pointer-events: none;
+    }
+
+    .kpi-card:hover::before {
+      opacity: 1;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 1px;
+    }
+
+    .kpi-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Charts */
+    .charts {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .charts {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .chart-card {
+      background: rgba(15,23,42,0.9);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148,163,184,0.45);
+      padding: 10px 10px 6px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(56,189,248,0.08), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .chart-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .chart-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.8);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .chart-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    #fleet_count_chart, #cost_chart {
+      width: 100%;
+      height: 370px;
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="container">
+    <header>
+      <div class="title-block">
+        <h1>
+          Fleet Analytics
+          <span class="pill">2024 – 2026</span>
+        </h1>
+        <div class="subtitle">
+          Monitoraggio evoluzione flotta e distribuzione costi per gruppo veicolo, con filtri dinamici per anno, mese e gruppo.
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-tag">
+          <span class="meta-dot"></span>
+          <span>Fonte dati: Registro Flotta Master</span>
+        </div>
+        <div class="meta-tag">
+          <span class="meta-dot" style="background: var(--danger); box-shadow: 0 0 12px rgba(248,113,113,0.9);"></span>
+          <span>Granularità: mese</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-card">
+        <div class="filter-label">
+          <span>Anno</span>
+          <span class="badge">Multi-select</span>
+        </div>
+        <select id="yearFilter" multiple></select>
+        <div class="filter-help">Seleziona uno o più anni (Ctrl/Cmd + click).</div>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-label">
+          <span>Mese</span>
+          <span class="badge">Facoltativo</span>
+        </div>
+        <select id="monthFilter" multiple></select>
+        <div class="filter-help">Lascia vuoto per includere tutti i mesi.</div>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-label">
+          <span>Gruppo veicolo</span>
+          <span class="badge">Multi-select</span>
+        </div>
+        <select id="groupFilter" multiple></select>
+        <div class="filter-help">Filtra per GRUPPO; vuoto = tutti i gruppi.</div>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpis-wrapper">
+      <div class="kpis-title">
+        <span>Overview <span class="accent">flotta &amp; costi</span></span>
+        <span id="kpi-selection-label" style="font-size:10px; color:var(--text-soft);"></span>
+      </div>
+      <div class="kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">Dimensione media flotta</div>
+          <div class="kpi-value" id="kpi_avg_vehicles">-</div>
+          <div class="kpi-sub">Veicoli medi attivi per mese.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Vehicle-months totali</div>
+          <div class="kpi-value" id="kpi_total_vehicles">-</div>
+          <div class="kpi-sub">Somma conteggio veicoli su mesi/gruppi.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Canone imponibile</div>
+          <div class="kpi-value" id="kpi_total_canone">-</div>
+          <div class="kpi-sub">Totale canoni per periodo filtrato.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Costo assicurazione</div>
+          <div class="kpi-value" id="kpi_total_ass">-</div>
+          <div class="kpi-sub">Totale coperture assicurative.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Costo totale</div>
+          <div class="kpi-value" id="kpi_total_cost">-</div>
+          <div class="kpi-sub">Canone + assicurazione nel periodo.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Costo medio / vehicle-month</div>
+          <div class="kpi-value" id="kpi_avg_cost_per_vm">-</div>
+          <div class="kpi-sub">Costo medio per veicolo attivo al mese.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts">
+      <div class="chart-card">
+        <div class="chart-inner">
+          <div class="chart-header">
+            <div class="chart-title">Andamento flotta</div>
+            <div class="chart-tag">Time series</div>
+          </div>
+          <div class="chart-subtitle">
+            Numero di veicoli attivi per mese, suddivisi per GRUPPO. Utile per cogliere trend, picchi e stagionalità.
+          </div>
+          <div id="fleet_count_chart"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-inner">
+          <div class="chart-header">
+            <div class="chart-title">Distribuzione costi</div>
+            <div class="chart-tag">Group comparison</div>
+          </div>
+          <div class="chart-subtitle">
+            Confronto tra Canone Imponibile e Copertura Assicurativa per GRUPPO veicolo nel periodo selezionato.
+          </div>
+          <div id="cost_chart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const rawData = [{"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "ECONOMY", "Vehicle_Count": 22, "Total_Canone_Imponibile": 1359.1200000000001, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "FURGONE", "Vehicle_Count": 95, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "LARGE", "Vehicle_Count": 60, "Total_Canone_Imponibile": 12907.45, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "MINI", "Vehicle_Count": 42, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "SMALL", "Vehicle_Count": 118, "Total_Canone_Imponibile": 30259.03, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "STATION", "Vehicle_Count": 16, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "SUV", "Vehicle_Count": 20, "Total_Canone_Imponibile": 8853.55, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 1, "MonthLabel": "2024-01", "GRUPPO": "VAN", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9320.86, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "ECONOMY", "Vehicle_Count": 22, "Total_Canone_Imponibile": 1359.1200000000001, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "FURGONE", "Vehicle_Count": 87, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "LARGE", "Vehicle_Count": 56, "Total_Canone_Imponibile": 12907.45, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "MINI", "Vehicle_Count": 42, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "SMALL", "Vehicle_Count": 110, "Total_Canone_Imponibile": 31321.75, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "STATION", "Vehicle_Count": 16, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "SUV", "Vehicle_Count": 16, "Total_Canone_Imponibile": 8853.55, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 2, "MonthLabel": "2024-02", "GRUPPO": "VAN", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9320.86, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "ECONOMY", "Vehicle_Count": 22, "Total_Canone_Imponibile": 1359.1200000000001, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "FURGONE", "Vehicle_Count": 49, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "LARGE", "Vehicle_Count": 57, "Total_Canone_Imponibile": 13801.45, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "SMALL", "Vehicle_Count": 105, "Total_Canone_Imponibile": 31587.43, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "STATION", "Vehicle_Count": 14, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "SUV", "Vehicle_Count": 16, "Total_Canone_Imponibile": 8853.55, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 3, "MonthLabel": "2024-03", "GRUPPO": "VAN", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9320.86, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "FURGONE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "LARGE", "Vehicle_Count": 60, "Total_Canone_Imponibile": 15034.2, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "SMALL", "Vehicle_Count": 102, "Total_Canone_Imponibile": 30693.43, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "STATION", "Vehicle_Count": 14, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "SUV", "Vehicle_Count": 23, "Total_Canone_Imponibile": 12921.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 4, "MonthLabel": "2024-04", "GRUPPO": "VAN", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9707.26, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "FURGONE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "LARGE", "Vehicle_Count": 67, "Total_Canone_Imponibile": 19866.31, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "SMALL", "Vehicle_Count": 101, "Total_Canone_Imponibile": 30119.25, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "STATION", "Vehicle_Count": 14, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 5, "MonthLabel": "2024-05", "GRUPPO": "VAN", "Vehicle_Count": 22, "Total_Canone_Imponibile": 12566.789999999999, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "FURGONE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "LARGE", "Vehicle_Count": 71, "Total_Canone_Imponibile": 21654.31, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "SMALL", "Vehicle_Count": 92, "Total_Canone_Imponibile": 27884.25, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "STATION", "Vehicle_Count": 14, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 6, "MonthLabel": "2024-06", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 12566.789999999999, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "FURGONE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "LARGE", "Vehicle_Count": 75, "Total_Canone_Imponibile": 23402.55, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "SMALL", "Vehicle_Count": 88, "Total_Canone_Imponibile": 26105.33, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "STATION", "Vehicle_Count": 13, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 7, "MonthLabel": "2024-07", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 12566.789999999999, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "FURGONE", "Vehicle_Count": 46, "Total_Canone_Imponibile": 25554.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "LARGE", "Vehicle_Count": 75, "Total_Canone_Imponibile": 23402.55, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 10139.02, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "SMALL", "Vehicle_Count": 85, "Total_Canone_Imponibile": 24764.329999999998, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "STATION", "Vehicle_Count": 13, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 8, "MonthLabel": "2024-08", "GRUPPO": "VAN", "Vehicle_Count": 20, "Total_Canone_Imponibile": 12566.789999999999, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "FURGONE", "Vehicle_Count": 67, "Total_Canone_Imponibile": 43404.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "LARGE", "Vehicle_Count": 75, "Total_Canone_Imponibile": 23402.55, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "MINI", "Vehicle_Count": 40, "Total_Canone_Imponibile": 9698.32, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "SMALL", "Vehicle_Count": 82, "Total_Canone_Imponibile": 23575.19, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "STATION", "Vehicle_Count": 13, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 9, "MonthLabel": "2024-09", "GRUPPO": "VAN", "Vehicle_Count": 20, "Total_Canone_Imponibile": 12566.789999999999, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "FURGONE", "Vehicle_Count": 67, "Total_Canone_Imponibile": 43404.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "LARGE", "Vehicle_Count": 76, "Total_Canone_Imponibile": 23879.52, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "MINI", "Vehicle_Count": 40, "Total_Canone_Imponibile": 9698.32, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "PREMIUM", "Vehicle_Count": 10, "Total_Canone_Imponibile": 4408.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "SMALL", "Vehicle_Count": 77, "Total_Canone_Imponibile": 21710.59, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "STATION", "Vehicle_Count": 13, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 10, "MonthLabel": "2024-10", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 13505.3, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "FURGONE", "Vehicle_Count": 69, "Total_Canone_Imponibile": 44855.37, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "LARGE", "Vehicle_Count": 75, "Total_Canone_Imponibile": 23879.52, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "MINI", "Vehicle_Count": 40, "Total_Canone_Imponibile": 9698.32, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "PREMIUM", "Vehicle_Count": 9, "Total_Canone_Imponibile": 3752.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "SMALL", "Vehicle_Count": 70, "Total_Canone_Imponibile": 18716.59, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "STATION", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "SUV", "Vehicle_Count": 29, "Total_Canone_Imponibile": 17721.53, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 11, "MonthLabel": "2024-11", "GRUPPO": "VAN", "Vehicle_Count": 23, "Total_Canone_Imponibile": 15382.32, "Total_Copertura_Ass": 256.0}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "FURGONE", "Vehicle_Count": 68, "Total_Canone_Imponibile": 44282.46, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "LARGE", "Vehicle_Count": 70, "Total_Canone_Imponibile": 21627.170000000002, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "MINI", "Vehicle_Count": 40, "Total_Canone_Imponibile": 9698.32, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "PREMIUM", "Vehicle_Count": 9, "Total_Canone_Imponibile": 3752.71, "Total_Copertura_Ass": 829.661}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "SMALL", "Vehicle_Count": 66, "Total_Canone_Imponibile": 16552.39, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "STATION", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "SUV", "Vehicle_Count": 28, "Total_Canone_Imponibile": 17146.1, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2024, "Month": 12, "MonthLabel": "2024-12", "GRUPPO": "VAN", "Vehicle_Count": 22, "Total_Canone_Imponibile": 15382.32, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "ECONOMY", "Vehicle_Count": 37, "Total_Canone_Imponibile": 8484.12, "Total_Copertura_Ass": 2190.1994666666665}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "FURGONE", "Vehicle_Count": 97, "Total_Canone_Imponibile": 76032.46, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "LARGE", "Vehicle_Count": 67, "Total_Canone_Imponibile": 20131.8, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "MINI", "Vehicle_Count": 38, "Total_Canone_Imponibile": 9121.28, "Total_Copertura_Ass": 1444.7993333333332}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "PREMIUM", "Vehicle_Count": 9, "Total_Canone_Imponibile": 3752.71, "Total_Copertura_Ass": 829.661}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "SMALL", "Vehicle_Count": 56, "Total_Canone_Imponibile": 12009.380000000001, "Total_Copertura_Ass": 2361.352833333334}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "STATION", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "SUV", "Vehicle_Count": 27, "Total_Canone_Imponibile": 16517.39, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 1, "MonthLabel": "2025-01", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 14440.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "ECONOMY", "Vehicle_Count": 39, "Total_Canone_Imponibile": 11612.12, "Total_Copertura_Ass": 1733.7477333333331}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "FURGONE", "Vehicle_Count": 90, "Total_Canone_Imponibile": 71290.81999999999, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "LARGE", "Vehicle_Count": 72, "Total_Canone_Imponibile": 22597.84, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "MINI", "Vehicle_Count": 30, "Total_Canone_Imponibile": 7388.16, "Total_Copertura_Ass": 1199.6846666666665}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "PREMIUM", "Vehicle_Count": 9, "Total_Canone_Imponibile": 3752.71, "Total_Copertura_Ass": 829.661}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "SMALL", "Vehicle_Count": 60, "Total_Canone_Imponibile": 16430.9, "Total_Copertura_Ass": 2000.8313333333338}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "STATION", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "SUV", "Vehicle_Count": 25, "Total_Canone_Imponibile": 15415.7, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 2, "MonthLabel": "2025-02", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 14440.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1537.1799999999998, "Total_Copertura_Ass": 603.2113333333334}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "ECONOMY", "Vehicle_Count": 54, "Total_Canone_Imponibile": 14907.47, "Total_Copertura_Ass": 3538.887276833333}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "FURGONE", "Vehicle_Count": 87, "Total_Canone_Imponibile": 66940.81999999999, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "LARGE", "Vehicle_Count": 72, "Total_Canone_Imponibile": 22512.66, "Total_Copertura_Ass": 3293.2958083333333}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "MINI", "Vehicle_Count": 38, "Total_Canone_Imponibile": 8599.12, "Total_Copertura_Ass": 2360.563965}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "PREMIUM", "Vehicle_Count": 8, "Total_Canone_Imponibile": 2829.1, "Total_Copertura_Ass": 829.661}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "SMALL", "Vehicle_Count": 61, "Total_Canone_Imponibile": 16953.627272727274, "Total_Copertura_Ass": 2000.8313333333338}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "STATION", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2340.24, "Total_Copertura_Ass": 957.1543916666667}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "SUV", "Vehicle_Count": 24, "Total_Canone_Imponibile": 14936.539999999999, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 3, "MonthLabel": "2025-03", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 14440.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "CABRIOLET", "Vehicle_Count": 7, "Total_Canone_Imponibile": 1170.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "ECONOMY", "Vehicle_Count": 74, "Total_Canone_Imponibile": 25691.76, "Total_Copertura_Ass": 3824.1236101666664}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "FURGONE", "Vehicle_Count": 76, "Total_Canone_Imponibile": 57590.82, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "LARGE", "Vehicle_Count": 127, "Total_Canone_Imponibile": 48716.31, "Total_Copertura_Ass": 9140.942995833333}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "MINI", "Vehicle_Count": 38, "Total_Canone_Imponibile": 8599.12, "Total_Copertura_Ass": 2360.563965}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "SMALL", "Vehicle_Count": 61, "Total_Canone_Imponibile": 16953.627272727274, "Total_Copertura_Ass": 2000.8313333333338}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "SUV", "Vehicle_Count": 22, "Total_Canone_Imponibile": 13405.84, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 4, "MonthLabel": "2025-04", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 14440.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1170.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "ECONOMY", "Vehicle_Count": 75, "Total_Canone_Imponibile": 25692.76, "Total_Copertura_Ass": 3824.1236101666664}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "FURGONE", "Vehicle_Count": 50, "Total_Canone_Imponibile": 33861.25, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "LARGE", "Vehicle_Count": 116, "Total_Canone_Imponibile": 47091.44, "Total_Copertura_Ass": 8140.942995833333}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "MINI", "Vehicle_Count": 39, "Total_Canone_Imponibile": 8600.12, "Total_Copertura_Ass": 2360.563965}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "SMALL", "Vehicle_Count": 61, "Total_Canone_Imponibile": 16953.627272727274, "Total_Copertura_Ass": 2000.8313333333338}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "SUV", "Vehicle_Count": 25, "Total_Canone_Imponibile": 14773.89, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 5, "MonthLabel": "2025-05", "GRUPPO": "VAN", "Vehicle_Count": 21, "Total_Canone_Imponibile": 14440.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "CABRIOLET", "Vehicle_Count": 9, "Total_Canone_Imponibile": 1171.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "ECONOMY", "Vehicle_Count": 75, "Total_Canone_Imponibile": 25692.76, "Total_Copertura_Ass": 3824.1236101666664}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "FURGONE", "Vehicle_Count": 41, "Total_Canone_Imponibile": 25011.25, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "LARGE", "Vehicle_Count": 117, "Total_Canone_Imponibile": 47092.44, "Total_Copertura_Ass": 8140.942995833333}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 8602.12, "Total_Copertura_Ass": 2360.563965}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "SMALL", "Vehicle_Count": 61, "Total_Canone_Imponibile": 16688.947272727273, "Total_Copertura_Ass": 2000.8313333333338}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "SUV", "Vehicle_Count": 25, "Total_Canone_Imponibile": 14773.89, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2025, "Month": 6, "MonthLabel": "2025-06", "GRUPPO": "VAN", "Vehicle_Count": 23, "Total_Canone_Imponibile": 14442.42, "Total_Copertura_Ass": 256.0}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "CABRIOLET", "Vehicle_Count": 9, "Total_Canone_Imponibile": 1171.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "ECONOMY", "Vehicle_Count": 89, "Total_Canone_Imponibile": 25706.76, "Total_Copertura_Ass": 4539.452360166667}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "FURGONE", "Vehicle_Count": 41, "Total_Canone_Imponibile": 25011.25, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "LARGE", "Vehicle_Count": 136, "Total_Canone_Imponibile": 42299.44, "Total_Copertura_Ass": 10188.314662499999}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 8602.12, "Total_Copertura_Ass": 2360.563965}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "SMALL", "Vehicle_Count": 76, "Total_Canone_Imponibile": 16703.947272727273, "Total_Copertura_Ass": 2173.7275833333338}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "SUV", "Vehicle_Count": 39, "Total_Canone_Imponibile": 15172.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 7, "MonthLabel": "2025-07", "GRUPPO": "VAN", "Vehicle_Count": 26, "Total_Canone_Imponibile": 16154.42, "Total_Copertura_Ass": 331.63}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1171.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "ECONOMY", "Vehicle_Count": 77, "Total_Canone_Imponibile": 20006.76, "Total_Copertura_Ass": 4539.452360166667}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "FURGONE", "Vehicle_Count": 38, "Total_Canone_Imponibile": 23245.16, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "LARGE", "Vehicle_Count": 136, "Total_Canone_Imponibile": 42299.44, "Total_Copertura_Ass": 10188.314662499999}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "MINI", "Vehicle_Count": 41, "Total_Canone_Imponibile": 8602.12, "Total_Copertura_Ass": 2232.563965}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "SMALL", "Vehicle_Count": 76, "Total_Canone_Imponibile": 16703.947272727273, "Total_Copertura_Ass": 2173.7275833333338}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "SUV", "Vehicle_Count": 39, "Total_Canone_Imponibile": 15172.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 8, "MonthLabel": "2025-08", "GRUPPO": "VAN", "Vehicle_Count": 27, "Total_Canone_Imponibile": 16155.42, "Total_Copertura_Ass": 407.26}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1171.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "ECONOMY", "Vehicle_Count": 77, "Total_Canone_Imponibile": 20006.76, "Total_Copertura_Ass": 4539.452360166667}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "FURGONE", "Vehicle_Count": 49, "Total_Canone_Imponibile": 36745.159999999996, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "LARGE", "Vehicle_Count": 135, "Total_Canone_Imponibile": 41852.44, "Total_Copertura_Ass": 10188.314662499999}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "MINI", "Vehicle_Count": 40, "Total_Canone_Imponibile": 8601.12, "Total_Copertura_Ass": 2104.563965}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "PREMIUM", "Vehicle_Count": 6, "Total_Canone_Imponibile": 1399.3899999999999, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "SMALL", "Vehicle_Count": 77, "Total_Canone_Imponibile": 16703.947272727273, "Total_Copertura_Ass": 2173.7275833333338}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "STATION", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2750.28, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "SUV", "Vehicle_Count": 39, "Total_Canone_Imponibile": 15172.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 9, "MonthLabel": "2025-09", "GRUPPO": "VAN", "Vehicle_Count": 26, "Total_Canone_Imponibile": 15835.619999999999, "Total_Copertura_Ass": 407.26}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "CABRIOLET", "Vehicle_Count": 8, "Total_Canone_Imponibile": 1171.09, "Total_Copertura_Ass": 483.21133333333336}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "ECONOMY", "Vehicle_Count": 59, "Total_Canone_Imponibile": 14451.76, "Total_Copertura_Ass": 3740.661826833333}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "FURGONE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 36163.159999999996, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "LARGE", "Vehicle_Count": 116, "Total_Canone_Imponibile": 32755.829999999998, "Total_Copertura_Ass": 9786.623854166666}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "MINI", "Vehicle_Count": 36, "Total_Canone_Imponibile": 8597.12, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "PREMIUM", "Vehicle_Count": 5, "Total_Canone_Imponibile": 760.68, "Total_Copertura_Ass": 701.661}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "SMALL", "Vehicle_Count": 58, "Total_Canone_Imponibile": 10998.220000000001, "Total_Copertura_Ass": 1223.3369166666669}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "STATION", "Vehicle_Count": 8, "Total_Canone_Imponibile": 417.04, "Total_Copertura_Ass": 1085.1543916666667}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "SUV", "Vehicle_Count": 41, "Total_Canone_Imponibile": 16256.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 10, "MonthLabel": "2025-10", "GRUPPO": "VAN", "Vehicle_Count": 24, "Total_Canone_Imponibile": 14525.31, "Total_Copertura_Ass": 407.26}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "CABRIOLET", "Vehicle_Count": 6, "Total_Canone_Imponibile": 781.68, "Total_Copertura_Ass": 362.4085}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "ECONOMY", "Vehicle_Count": 45, "Total_Canone_Imponibile": 6692.64, "Total_Copertura_Ass": 3740.661826833333}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "FURGONE", "Vehicle_Count": 45, "Total_Canone_Imponibile": 31813.16, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "LARGE", "Vehicle_Count": 96, "Total_Canone_Imponibile": 20798.829999999998, "Total_Copertura_Ass": 9646.894895833333}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "MINI", "Vehicle_Count": 34, "Total_Canone_Imponibile": 7798.16, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "SMALL", "Vehicle_Count": 48, "Total_Canone_Imponibile": 8566.68, "Total_Copertura_Ass": 764.6415833333334}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "SUV", "Vehicle_Count": 35, "Total_Canone_Imponibile": 11877.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 11, "MonthLabel": "2025-11", "GRUPPO": "VAN", "Vehicle_Count": 19, "Total_Canone_Imponibile": 10758.17, "Total_Copertura_Ass": 407.26}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "CABRIOLET", "Vehicle_Count": 4, "Total_Canone_Imponibile": 4.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "ECONOMY", "Vehicle_Count": 40, "Total_Canone_Imponibile": 3842.64, "Total_Copertura_Ass": 3740.661826833333}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "FURGONE", "Vehicle_Count": 45, "Total_Canone_Imponibile": 31813.16, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "LARGE", "Vehicle_Count": 91, "Total_Canone_Imponibile": 18179.9, "Total_Copertura_Ass": 9646.894895833333}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "MINI", "Vehicle_Count": 20, "Total_Canone_Imponibile": 2561.28, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "SMALL", "Vehicle_Count": 48, "Total_Canone_Imponibile": 8566.68, "Total_Copertura_Ass": 764.6415833333334}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "SUV", "Vehicle_Count": 32, "Total_Canone_Imponibile": 9477.66, "Total_Copertura_Ass": 1230.9196666666667}, {"Year": 2025, "Month": 12, "MonthLabel": "2025-12", "GRUPPO": "VAN", "Vehicle_Count": 18, "Total_Canone_Imponibile": 9838.279999999999, "Total_Copertura_Ass": 407.26}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "FURGONE", "Vehicle_Count": 31, "Total_Canone_Imponibile": 23752.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "LARGE", "Vehicle_Count": 58, "Total_Canone_Imponibile": 18146.9, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "MINI", "Vehicle_Count": 16, "Total_Canone_Imponibile": 2557.28, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "SMALL", "Vehicle_Count": 31, "Total_Canone_Imponibile": 8550.68, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "SUV", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9464.66, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 1, "MonthLabel": "2026-01", "GRUPPO": "VAN", "Vehicle_Count": 12, "Total_Canone_Imponibile": 7993.79, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "FURGONE", "Vehicle_Count": 31, "Total_Canone_Imponibile": 23752.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "LARGE", "Vehicle_Count": 58, "Total_Canone_Imponibile": 18146.9, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "MINI", "Vehicle_Count": 16, "Total_Canone_Imponibile": 2557.28, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "SMALL", "Vehicle_Count": 31, "Total_Canone_Imponibile": 8550.68, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "SUV", "Vehicle_Count": 19, "Total_Canone_Imponibile": 9464.66, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 2, "MonthLabel": "2026-02", "GRUPPO": "VAN", "Vehicle_Count": 12, "Total_Canone_Imponibile": 7993.79, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "FURGONE", "Vehicle_Count": 31, "Total_Canone_Imponibile": 23752.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "LARGE", "Vehicle_Count": 58, "Total_Canone_Imponibile": 18146.9, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "MINI", "Vehicle_Count": 16, "Total_Canone_Imponibile": 2557.28, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "SMALL", "Vehicle_Count": 27, "Total_Canone_Imponibile": 7487.96, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "SUV", "Vehicle_Count": 18, "Total_Canone_Imponibile": 8855.3, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 3, "MonthLabel": "2026-03", "GRUPPO": "VAN", "Vehicle_Count": 12, "Total_Canone_Imponibile": 7993.79, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "FURGONE", "Vehicle_Count": 30, "Total_Canone_Imponibile": 23092.64, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "LARGE", "Vehicle_Count": 58, "Total_Canone_Imponibile": 18146.9, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "SMALL", "Vehicle_Count": 26, "Total_Canone_Imponibile": 7222.28, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "SUV", "Vehicle_Count": 18, "Total_Canone_Imponibile": 8855.3, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 4, "MonthLabel": "2026-04", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "FURGONE", "Vehicle_Count": 24, "Total_Canone_Imponibile": 18678.14, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "LARGE", "Vehicle_Count": 58, "Total_Canone_Imponibile": 18146.9, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "SMALL", "Vehicle_Count": 18, "Total_Canone_Imponibile": 4472.84, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "SUV", "Vehicle_Count": 18, "Total_Canone_Imponibile": 8855.3, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 5, "MonthLabel": "2026-05", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "FURGONE", "Vehicle_Count": 24, "Total_Canone_Imponibile": 18678.14, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "LARGE", "Vehicle_Count": 55, "Total_Canone_Imponibile": 16914.15, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "SMALL", "Vehicle_Count": 12, "Total_Canone_Imponibile": 2410.76, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "SUV", "Vehicle_Count": 17, "Total_Canone_Imponibile": 8245.94, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 6, "MonthLabel": "2026-06", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "FURGONE", "Vehicle_Count": 24, "Total_Canone_Imponibile": 18678.14, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "LARGE", "Vehicle_Count": 53, "Total_Canone_Imponibile": 16117.04, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "SMALL", "Vehicle_Count": 11, "Total_Canone_Imponibile": 2067.08, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "SUV", "Vehicle_Count": 17, "Total_Canone_Imponibile": 8245.94, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 7, "MonthLabel": "2026-07", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "FURGONE", "Vehicle_Count": 23, "Total_Canone_Imponibile": 17943.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "LARGE", "Vehicle_Count": 53, "Total_Canone_Imponibile": 16117.04, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "SMALL", "Vehicle_Count": 5, "Total_Canone_Imponibile": 5.0, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "SUV", "Vehicle_Count": 16, "Total_Canone_Imponibile": 7664.8, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 8, "MonthLabel": "2026-08", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "CABRIOLET", "Vehicle_Count": 3, "Total_Canone_Imponibile": 3.0, "Total_Copertura_Ass": 362.4085}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "FURGONE", "Vehicle_Count": 23, "Total_Canone_Imponibile": 17943.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "LARGE", "Vehicle_Count": 52, "Total_Canone_Imponibile": 15709.8, "Total_Copertura_Ass": 7599.523229166666}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "PREMIUM", "Vehicle_Count": 2, "Total_Canone_Imponibile": 2.0, "Total_Copertura_Ass": 350.8305}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "SMALL", "Vehicle_Count": 5, "Total_Canone_Imponibile": 5.0, "Total_Copertura_Ass": 591.7453333333334}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "STATION", "Vehicle_Count": 6, "Total_Canone_Imponibile": 415.04, "Total_Copertura_Ass": 811.6817083333334}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "SUV", "Vehicle_Count": 16, "Total_Canone_Imponibile": 7664.8, "Total_Copertura_Ass": 177.76091666666665}, {"Year": 2026, "Month": 9, "MonthLabel": "2026-09", "GRUPPO": "VAN", "Vehicle_Count": 11, "Total_Canone_Imponibile": 7180.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "ECONOMY", "Vehicle_Count": 24, "Total_Canone_Imponibile": 3826.64, "Total_Copertura_Ass": 2897.3330768333335}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "FURGONE", "Vehicle_Count": 23, "Total_Canone_Imponibile": 17943.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "LARGE", "Vehicle_Count": 48, "Total_Canone_Imponibile": 15705.8, "Total_Copertura_Ass": 7057.1121875}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "STATION", "Vehicle_Count": 1, "Total_Canone_Imponibile": 410.04, "Total_Copertura_Ass": 128.0}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "SUV", "Vehicle_Count": 15, "Total_Canone_Imponibile": 7663.8, "Total_Copertura_Ass": 0.0}, {"Year": 2026, "Month": 10, "MonthLabel": "2026-10", "GRUPPO": "VAN", "Vehicle_Count": 10, "Total_Canone_Imponibile": 6570.17, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "ECONOMY", "Vehicle_Count": 22, "Total_Canone_Imponibile": 3302.35, "Total_Copertura_Ass": 2612.0967435000002}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "FURGONE", "Vehicle_Count": 23, "Total_Canone_Imponibile": 17943.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "LARGE", "Vehicle_Count": 12, "Total_Canone_Imponibile": 1179.9299999999998, "Total_Copertura_Ass": 1337.465}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "SUV", "Vehicle_Count": 8, "Total_Canone_Imponibile": 3595.8199999999997, "Total_Copertura_Ass": 0.0}, {"Year": 2026, "Month": 11, "MonthLabel": "2026-11", "GRUPPO": "VAN", "Vehicle_Count": 7, "Total_Canone_Imponibile": 4788.69, "Total_Copertura_Ass": 256.0}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "ECONOMY", "Vehicle_Count": 22, "Total_Canone_Imponibile": 3302.35, "Total_Copertura_Ass": 2612.0967435000002}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "FURGONE", "Vehicle_Count": 23, "Total_Canone_Imponibile": 17943.08, "Total_Copertura_Ass": 535.8554666666666}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "LARGE", "Vehicle_Count": 11, "Total_Canone_Imponibile": 827.8, "Total_Copertura_Ass": 1209.465}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "MINI", "Vehicle_Count": 14, "Total_Canone_Imponibile": 1792.0, "Total_Copertura_Ass": 1614.3346316666664}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "SUV", "Vehicle_Count": 2, "Total_Canone_Imponibile": 1084.0, "Total_Copertura_Ass": 0.0}, {"Year": 2026, "Month": 12, "MonthLabel": "2026-12", "GRUPPO": "VAN", "Vehicle_Count": 4, "Total_Canone_Imponibile": 2525.27, "Total_Copertura_Ass": 256.0}];
+
+  function uniqueValues(array, accessor) {
+    const set = new Set();
+    array.forEach(d => {
+      const v = accessor(d);
+      if (v !== null && v !== undefined) {
+        set.add(v);
+      }
+    });
+    return Array.from(set).sort((a, b) => (a > b ? 1 : -1));
+  }
+
+  function initFilters() {
+    const yearSelect = document.getElementById('yearFilter');
+    const monthSelect = document.getElementById('monthFilter');
+    const groupSelect = document.getElementById('groupFilter');
+
+    const years = uniqueValues(rawData, d => d.Year);
+    years.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
+    });
+
+    const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+    const monthNames = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+    months.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = (m.toString().padStart(2, '0')) + ' - ' + monthNames[m-1];
+      monthSelect.appendChild(opt);
+    });
+
+    const groups = uniqueValues(rawData, d => d.GRUPPO || 'N/A');
+    groups.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g;
+      groupSelect.appendChild(opt);
+    });
+  }
+
+  function getSelectedValues(selectElem) {
+    const values = [];
+    for (let i = 0; i < selectElem.options.length; i++) {
+      const opt = selectElem.options[i];
+      if (opt.selected) {
+        values.push(opt.value);
+      }
+    }
+    return values;
+  }
+
+  function filterData() {
+    const yearSelect = document.getElementById('yearFilter');
+    const monthSelect = document.getElementById('monthFilter');
+    const groupSelect = document.getElementById('groupFilter');
+
+    const yearsSel = getSelectedValues(yearSelect).map(v => parseInt(v));
+    const monthsSel = getSelectedValues(monthSelect).map(v => parseInt(v));
+    const groupsSel = getSelectedValues(groupSelect);
+
+    return rawData.filter(d => {
+      const yOK = yearsSel.length ? yearsSel.includes(d.Year) : true;
+      const mOK = monthsSel.length ? monthsSel.includes(d.Month) : true;
+      const gOK = groupsSel.length ? groupsSel.includes(d.GRUPPO || 'N/A') : true;
+      return yOK && mOK && gOK;
+    });
+  }
+
+  function formatNumber(num, decimals = 0) {
+    if (!isFinite(num)) return '-';
+    return num.toLocaleString('it-IT', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+
+  function updateSelectionLabel(filtered) {
+    const years = uniqueValues(filtered, d => d.Year);
+    const months = uniqueValues(filtered, d => d.Month);
+    const groups = uniqueValues(filtered, d => d.GRUPPO || 'N/A');
+
+    let parts = [];
+    if (years.length) parts.push('Anni: ' + years.join(', '));
+    if (months.length && months.length < 12) parts.push('Mesi: ' + months.join(', '));
+    if (groups.length && groups.length < 6) parts.push('Gruppi: ' + groups.join(', '));
+
+    const label = document.getElementById('kpi-selection-label');
+    label.textContent = parts.length ? parts.join(' • ') : 'Nessun filtro specifico (intero periodo).';
+  }
+
+  function updateKpis(filtered) {
+    let totalVehicleMonths = 0;
+    let totalCanone = 0;
+    let totalAss = 0;
+
+    const monthKeySet = new Set();
+
+    filtered.forEach(d => {
+      const vc = Number(d.Vehicle_Count) || 0;
+      const can = Number(d.Total_Canone_Imponibile) || 0;
+      const ass = Number(d.Total_Copertura_Ass) || 0;
+
+      totalVehicleMonths += vc;
+      totalCanone += can;
+      totalAss += ass;
+
+      const key = d.Year + '-' + d.Month;
+      monthKeySet.add(key);
+    });
+
+    const monthsCount = monthKeySet.size || 0;
+    const avgVehicles = monthsCount ? (totalVehicleMonths / monthsCount) : 0;
+    const totalCost = totalCanone + totalAss;
+    const avgCostPerVM = totalVehicleMonths ? (totalCost / totalVehicleMonths) : 0;
+
+    document.getElementById('kpi_total_vehicles').textContent = formatNumber(totalVehicleMonths, 0);
+    document.getElementById('kpi_avg_vehicles').textContent = formatNumber(avgVehicles, 1);
+    document.getElementById('kpi_total_canone').textContent = '€ ' + formatNumber(totalCanone, 2);
+    document.getElementById('kpi_total_ass').textContent = '€ ' + formatNumber(totalAss, 2);
+    document.getElementById('kpi_total_cost').textContent = '€ ' + formatNumber(totalCost, 2);
+    document.getElementById('kpi_avg_cost_per_vm').textContent = totalVehicleMonths ? ('€ ' + formatNumber(avgCostPerVM, 2)) : '-';
+
+    updateSelectionLabel(filtered);
+  }
+
+  function plotFleetCount(filtered) {
+    const groups = uniqueValues(filtered, d => d.GRUPPO || 'N/A');
+    const traces = [];
+
+    groups.forEach(group => {
+      const rows = filtered.filter(d => (d.GRUPPO || 'N/A') === group);
+      rows.sort((a,b) => a.Year === b.Year ? a.Month - b.Month : a.Year - b.Year);
+
+      const x = rows.map(r => r.MonthLabel);
+      const y = rows.map(r => r.Vehicle_Count);
+
+      traces.push({
+        x: x,
+        y: y,
+        mode: 'lines+markers',
+        name: group,
+        line: {shape: 'spline'},
+        marker: {size: 6}
+      });
+    });
+
+    const layout = {
+      margin: {t: 30, r: 10, b: 50, l: 50},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(15,23,42,0.9)',
+      font: {color: '#e5e7eb'},
+      xaxis: {
+        title: 'Mese',
+        type: 'category',
+        tickangle: -45,
+        gridcolor: 'rgba(148,163,184,0.2)'
+      },
+      yaxis: {
+        title: 'Numero veicoli',
+        gridcolor: 'rgba(148,163,184,0.2)'
+      },
+      legend: {
+        orientation: 'h',
+        yanchor: 'bottom',
+        y: 1.02,
+        xanchor: 'right',
+        x: 1
+      }
+    };
+
+    Plotly.newPlot('fleet_count_chart', traces, layout, {responsive: true, displaylogo: false});
+  }
+
+  function plotCostChart(filtered) {
+    const grouped = {};
+    filtered.forEach(d => {
+      const g = d.GRUPPO || 'N/A';
+      if (!grouped[g]) {
+        grouped[g] = { canone: 0, copertura: 0 };
+      }
+      grouped[g].canone += Number(d.Total_Canone_Imponibile) || 0;
+      grouped[g].copertura += Number(d.Total_Copertura_Ass) || 0;
+    });
+
+    const groups = Object.keys(grouped).sort((a,b) => (a > b ? 1 : -1));
+    const x = groups;
+    const canone = groups.map(g => grouped[g].canone);
+    const copertura = groups.map(g => grouped[g].copertura);
+
+    const trace1 = {
+      x: x,
+      y: canone,
+      type: 'bar',
+      name: 'Canone Imponibile'
+    };
+
+    const trace2 = {
+      x: x,
+      y: copertura,
+      type: 'bar',
+      name: 'Copertura Ass.'
+    };
+
+    const layout = {
+      barmode: 'group',
+      margin: {t: 30, r: 10, b: 70, l: 55},
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(15,23,42,0.9)',
+      font: {color: '#e5e7eb'},
+      xaxis: {
+        title: 'Gruppo veicolo (GRUPPO)',
+        tickangle: -35,
+        gridcolor: 'rgba(148,163,184,0.12)'
+      },
+      yaxis: {
+        title: 'Costo totale (€)',
+        gridcolor: 'rgba(148,163,184,0.2)'
+      },
+      legend: {
+        orientation: 'h',
+        yanchor: 'bottom',
+        y: 1.02,
+        xanchor: 'right',
+        x: 1
+      }
+    };
+
+    Plotly.newPlot('cost_chart', [trace1, trace2], layout, {responsive: true, displaylogo: false});
+  }
+
+  function updateDashboard() {
+    const filtered = filterData();
+    updateKpis(filtered);
+    plotFleetCount(filtered);
+    plotCostChart(filtered);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initFilters();
+    const yearSelect = document.getElementById('yearFilter');
+    const monthSelect = document.getElementById('monthFilter');
+    const groupSelect = document.getElementById('groupFilter');
+
+    [yearSelect, monthSelect, groupSelect].forEach(sel => {
+      sel.addEventListener('change', updateDashboard);
+    });
+
+    updateDashboard();
+  });
+</script>
+</body>
+</html>
