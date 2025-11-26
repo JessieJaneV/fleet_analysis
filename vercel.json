@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/fleet_dashboard_2024_2026_modern (2) (1).html"
+    }
+  ]
+}
